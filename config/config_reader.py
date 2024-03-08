@@ -11,6 +11,7 @@ def getNfsReadDir():
 def getNfsWriteDir():
     return config['nfs']['write_dir']
 
+# TODO: can be read from ~/.aws/config
 
 def getS3Region():
     return config['s3']['region']
