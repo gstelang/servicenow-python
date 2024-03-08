@@ -14,7 +14,8 @@ from util.common import storeResultsInS3
 from util.common import validateIP
 from config.config_reader import *
 
-def getIPList(input_type): 
+
+def getIPList(input_type):
     ip_list = None
     if input_type == 'nfs':
         with open('path-to-ip-lists.txt') as fd:
@@ -36,17 +37,20 @@ def getIPList(input_type):
         page_counter = 0
         while data['more'] is True:
             page_counter += 1
-            response = requests.get('https://api/iplist?page=%d' % page_counter)
+            response = requests.get(
+                'https://api/iplist?page=%d' % page_counter)
             if response.status_code != 200:
-                raise Exception('non-200 status code: %d' % response.status_code)
+                raise Exception('non-200 status code: %d' %
+                                response.status_code)
             data = json.loads(response.text)
             ip_list.extend(data['iplist'])
         for ip in ip_list:
             validateIP(ip)
     if ip_list is None:
         raise Exception('unrecognized input_type "%s"' % input_type)
-    
+
     return ip_list
+
 
 def getResults(scan_type, ip_list):
     results = None
@@ -57,7 +61,8 @@ def getResults(scan_type, ip_list):
         for ip in ip_list:
             response = requests.get('https://%s/portdiscovery' % ip)
             if response.status_code != 200:
-                raise Exception('non-200 status code: %d' % response.status_code)
+                raise Exception('non-200 status code: %d' %
+                                response.status_code)
             data = json.loads(response.text)
             agent_url = '%s/api/2.0/status' % data['agenturl']
             response = requests.get(agent_url)
@@ -70,7 +75,8 @@ def getResults(scan_type, ip_list):
                 time.sleep(time_to_wait)
                 response = requests.get(agent_url)
             if response.status_code != 200:
-                raise Exception('non-200 status code: %d' % response.status_code)
+                raise Exception('non-200 status code: %d' %
+                                response.status_code)
             results[ip] = data['status']
     elif scan_type == 'nfs-read':
         results = dict()
@@ -89,7 +95,8 @@ def getResults(scan_type, ip_list):
     else:
         raise Exception('unrecognized scan_type %s' % scan_type)
 
-    return results    
+    return results
+
 
 def storeResults(storage_type, results):
     if storage_type == 's3':
@@ -107,21 +114,28 @@ def storeResults(storage_type, results):
     else:
         raise Exception('unrecognized storage_type %s' % storage_type)
 
+
 def main(input_type, scan_type, storage_type):
-    print("Getting ip list from " + input_type + " with scan_type as " + scan_type + " and storing on " + storage_type)
+    print("Getting ip list from " + input_type + " with scan_type as " +
+          scan_type + " and storing on " + storage_type)
     ip_list = getIPList(input_type)
     results = getResults(scan_type, ip_list)
     storeResults(storage_type, results)
 
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
-    # TODO: check match, add exception and exit if it does not 
-    parser = ArgumentParser(description="Command line utility to do magic with ips")
+    # TODO: check match, add exception and exit if it does not
+    parser = ArgumentParser(
+        description="Command line utility to do magic with ips")
 
-    parser.add_argument("--input", required=True, help="nfs or api", dest="input_type")
-    parser.add_argument("--scan", required=True, help="agent-pull or nfs-read", dest="scan_type")
-    parser.add_argument("--storage", required=True, help="s3 or nfs-write", dest="storage_type")
+    parser.add_argument("--input", required=True,
+                        help="nfs or api", dest="input_type")
+    parser.add_argument("--scan", required=True,
+                        help="agent-pull or nfs-read", dest="scan_type")
+    parser.add_argument("--storage", required=True,
+                        help="s3 or nfs-write", dest="storage_type")
 
     args = parser.parse_args()
     main(args.input_type, args.scan_type, args.storage_type)
