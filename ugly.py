@@ -101,8 +101,6 @@ elif scan_type == 'nfs-read':
                 results[ip] = result
 else:
     raise Exception('unrecognized scan_type %s' % scan_type)
-def genFileKey():
-    return time.strftime('%y-%m-%d-%h:%m:%s', time.localtime())
 
 if storage_type == 's3':
     storeResultsInS3(results, s3_region)
