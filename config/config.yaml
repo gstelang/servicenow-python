@@ -1,0 +1,7 @@
+---
+nfs:
+  read_dir: /nfs/agent-output
+  write_dir: /nfs/ip-scanner-results
+s3:
+  region: eu-west-1
+  bucket_prefix: ip-scanner-results

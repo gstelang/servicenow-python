@@ -8,6 +8,9 @@ import uuid
 # third party imports
 import boto3
 
+# other file imports
+from config.config_reader import getS3Bucket_prefix
+
 def storeResultsInS3(results, region):
     client, bucketname = getorcreatebucketandclient(region)
     dosS3Storage(client, bucketname, results)
@@ -24,8 +27,8 @@ def genS3client(region=None):
         return boto3.client('s3', region_name=region)
 def getExistingBucketName(client):
     response = client.list_buckets()
+    s3_bucket_prefix = getS3Bucket_prefix()
     for bucket in response['buckets']:
-         # TODO
         if s3_bucket_prefix in bucket['name']:
             return bucket['name']
     return None
@@ -38,8 +41,7 @@ def createBucket(client, region):
         client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
     return bucket_name
 def genBucketName():
-     # TODO
-    return s3_bucket_prefix + str(uuid.uuid4())
+    return getS3Bucket_prefix() + str(uuid.uuid4())
 def dosS3Storage(client, bucketname, results):
     data, data_hash = marshalResultsToObject(results)
     client.put_object(

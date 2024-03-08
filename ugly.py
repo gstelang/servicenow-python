@@ -12,17 +12,7 @@ import requests
 # file imports
 from util.common import storeResultsInS3
 from util.common import validateIP
-
-# TODO: move this to yaml
-max_agent_pull_retries = 10
-
-# nfs config
-nfs_read_dir = '/nfs/agent-output'
-nfs_write_dir = '/nfs/ip-scanner-results'
-
-# s3 config
-s3_region = 'eu-west-1'
-s3_bucket_prefix = 'ip-scanner-results'
+from config.config_reader import *
 
 def getIPList(input_type): 
     ip_list = None
@@ -62,6 +52,8 @@ def getResults(scan_type, ip_list):
     results = None
     if scan_type == 'agent-pull':
         results = dict()
+        max_agent_pull_retries = 10
+
         for ip in ip_list:
             response = requests.get('https://%s/portdiscovery' % ip)
             if response.status_code != 200:
@@ -82,6 +74,7 @@ def getResults(scan_type, ip_list):
             results[ip] = data['status']
     elif scan_type == 'nfs-read':
         results = dict()
+        nfs_read_dir = getNfsReadDir()
         for ip in ip_list:
             agent_nfs_path = '%s/%s' % (nfs_read_dir, ip)
             for dir_name, subdir_list, file_list in os.walk(agent_nfs_path):
@@ -100,10 +93,10 @@ def getResults(scan_type, ip_list):
 
 def storeResults(storage_type, results):
     if storage_type == 's3':
-        storeResultsInS3(results, s3_region)
+        storeResultsInS3(results, getS3Region())
     elif storage_type == 'nfs-write':
         file_name = time.strftime('%y-%m-%d-%h:%m:%s', time.localtime())
-        file_full_path = '/'.join([nfs_write_dir, file_name]) + '.json'
+        file_full_path = '/'.join([getNfsWriteDir(), file_name]) + '.json'
         v2schema = {
             'schema': 2.0,
             'results': results,
