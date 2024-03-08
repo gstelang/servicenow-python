@@ -4,6 +4,7 @@
 import json
 import os
 import time
+import sys
 
 # third party imports
 import requests
@@ -11,11 +12,6 @@ import requests
 # file imports
 from util.common import storeResultsInS3
 from util.common import validateIP
-
-# TODO: this is cli parameters
-input_type = 'nfs' # or api
-scan_type = 'agent-pull' # or nfs-read
-storage_type = 's3' # or nfs-write'
 
 # TODO: move this to yaml
 max_agent_pull_retries = 10
@@ -118,9 +114,21 @@ def storeResults(storage_type, results):
     else:
         raise Exception('unrecognized storage_type %s' % storage_type)
 
-def main():
+def main(input_type, scan_type, storage_type):
+    print("Getting ip list from " + input_type + " with scan_type as " + scan_type + " and storing on " + storage_type)
     ip_list = getIPList(input_type)
     results = getResults(scan_type, ip_list)
     storeResults(storage_type, results)
 
-main()   
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    # TODO: check match, add exception and exit if it does not 
+    parser = ArgumentParser(description="Command line utility to do magic with ips")
+
+    parser.add_argument("--input", required=True, help="nfs or api", dest="input_type")
+    parser.add_argument("--scan", required=True, help="agent-pull or nfs-read", dest="scan_type")
+    parser.add_argument("--storage", required=True, help="s3 or nfs-write", dest="storage_type")
+
+    args = parser.parse_args()
+    main(args.input_type, args.scan_type, args.storage_type)
