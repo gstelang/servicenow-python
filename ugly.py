@@ -10,29 +10,23 @@ import requests
 
 # file imports
 from util.common import storeResultsInS3
+from util.common import validateIP
 
-input_type = 'nfs'
-scan_type = 'agent-pull'
+# TODO: this is cli parameters
+input_type = 'nfs' # or api
+scan_type = 'agent-pull' # or nfs-read
+storage_type = 's3' # or nfs-write'
+
+# TODO: move this to yaml
 max_agent_pull_retries = 10
+
+# nfs config
 nfs_read_dir = '/nfs/agent-output'
-storage_type = 's3'
-s3_region = 'eu-west-1'
-s3_bucket_prefix = 'ip-scanner-results'
 nfs_write_dir = '/nfs/ip-scanner-results'
 
-def validateIP(maybe_ip):
-    if not isinstance(maybe_ip, str):
-        raise Exception('ip not a string: %s' % maybe_ip)
-    parts = maybe_ip.split('.')
-    if len(parts) != 4:
-        raise Exception('ip not a dotted quad: %s' % maybe_ip)
-    for num_s in parts:
-        try:
-            num = int(num_s)
-        except ValueError:
-            raise Exception('ip dotted-quad components not all integers: %s' % maybe_ip)
-        if num < 0 or num > 255:
-            raise Exception('ip dotted-quad component not between 0 and 255: %s' % maybe_ip)
+# s3 config
+s3_region = 'eu-west-1'
+s3_bucket_prefix = 'ip-scanner-results'
 
 ip_list = None
 if input_type == 'nfs':
