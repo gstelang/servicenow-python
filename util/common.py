@@ -2,6 +2,7 @@
 # stdlib imports
 import base64
 import hashlib
+import json
 import uuid
 
 # third party imports
@@ -24,6 +25,7 @@ def genS3client(region=None):
 def getExistingBucketName(client):
     response = client.list_buckets()
     for bucket in response['buckets']:
+         # TODO
         if s3_bucket_prefix in bucket['name']:
             return bucket['name']
     return None
@@ -36,6 +38,7 @@ def createBucket(client, region):
         client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
     return bucket_name
 def genBucketName():
+     # TODO
     return s3_bucket_prefix + str(uuid.uuid4())
 def dosS3Storage(client, bucketname, results):
     data, data_hash = marshalResultsToObject(results)
@@ -45,6 +48,7 @@ def dosS3Storage(client, bucketname, results):
         Bucket=bucketname,
         ContentEncoding='application/json',
         ContentMD5=data_hash,
+        # TODO
         Key=file_name,
     )
 def marshalResultsToObject(results):
@@ -56,3 +60,17 @@ def marshalResultsToObject(results):
     hash = hashlib.md5(str.encode(data))
     b64hash = base64.encode(hash.digest())
     return data, b64hash
+
+def validateIP(maybe_ip):
+    if not isinstance(maybe_ip, str):
+        raise Exception('ip not a string: %s' % maybe_ip)
+    parts = maybe_ip.split('.')
+    if len(parts) != 4:
+        raise Exception('ip not a dotted quad: %s' % maybe_ip)
+    for num_s in parts:
+        try:
+            num = int(num_s)
+        except ValueError:
+            raise Exception('ip dotted-quad components not all integers: %s' % maybe_ip)
+        if num < 0 or num > 255:
+            raise Exception('ip dotted-quad component not between 0 and 255: %s' % maybe_ip)
